@@ -15,7 +15,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var topTextButton: UIButton!
     @IBOutlet weak var bottomTextButton: UIButton!
     
-    var image = UIImage()
+    var image: UIImage? = nil
     var textTop = ""
     var textBottom = ""
     
@@ -26,16 +26,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func setupUI() {
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareTapped))
+        navigationController?.navigationBar.tintColor = .black
+        
         importPhotoButton.layer.borderWidth = 3
-        importPhotoButton.layer.borderColor = UIColor.black.cgColor
+        importPhotoButton.layer.borderColor = UIColor.darkGray.cgColor
+        importPhotoButton.backgroundColor = UIColor.darkGray
+        importPhotoButton.setTitleColor(.white, for: .normal)
         importPhotoButton.layer.cornerRadius = 10
         
         topTextButton.layer.borderWidth = 3
-        topTextButton.layer.borderColor = UIColor.black.cgColor
+        topTextButton.layer.borderColor = UIColor.darkGray.cgColor
+        topTextButton.backgroundColor = UIColor.darkGray
+        topTextButton.setTitleColor(.white, for: .normal)
         topTextButton.layer.cornerRadius = 10
         
         bottomTextButton.layer.borderWidth = 3
-        bottomTextButton.layer.borderColor = UIColor.black.cgColor
+        bottomTextButton.layer.borderColor = UIColor.darkGray.cgColor
+        bottomTextButton.backgroundColor = UIColor.darkGray
+        bottomTextButton.setTitleColor(.white, for: .normal)
         bottomTextButton.layer.cornerRadius = 10
     }
 
@@ -58,27 +68,52 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @IBAction func topTextTapped(_ sender: Any) {
-        let ac = UIAlertController(title: "Type text for the top", message: nil, preferredStyle: .alert)
-        ac.addTextField()
-        ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] action in
-            guard let text = ac.textFields?[0].text else { return }
-            self?.textTop = text
-            self?.addText()
-        })
-        
-        present(ac, animated: true)
+        if self.image == nil {
+            shouldImportPhoto()
+        } else {
+            let ac = UIAlertController(title: "Type text for the top", message: nil, preferredStyle: .alert)
+            ac.addTextField()
+            ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] action in
+                guard let text = ac.textFields?[0].text else { return }
+                self?.textTop = text
+                self?.addText()
+            })
+            
+            present(ac, animated: true)
+        }
     }
     
     @IBAction func bottomTextTapped(_ sender: UIButton) {
-        let ac = UIAlertController(title: "Type text for the bottom", message: nil, preferredStyle: .alert)
-        ac.addTextField()
-        ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] action in
-            guard let text = ac.textFields?[0].text else { return }
-            self?.textBottom = text
-            self?.addText()
-        })
+        if self.image == nil {
+            shouldImportPhoto()
+        } else {
+            let ac = UIAlertController(title: "Type text for the bottom", message: nil, preferredStyle: .alert)
+            ac.addTextField()
+            ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+                guard let text = ac.textFields?[0].text else { return }
+                self?.textBottom = text
+                self?.addText()
+            })
+            
+            present(ac, animated: true)
+        }
+    }
+    
+    @objc func shareTapped() {
+            if let image = imageView.image {
+                let vc = UIActivityViewController(activityItems: [image], applicationActivities: [])
+                vc.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
+                present(vc, animated: true)
+            }
+            
+    }
+    
+    func shouldImportPhoto() {
+        let ac = UIAlertController(title: "Need photo", message: "You have to import photo using the Import Photo Button", preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
         
         present(ac, animated: true)
+        
     }
     
     func addText() {
@@ -93,14 +128,14 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: 25, weight: .semibold),
-                .foregroundColor: UIColor.red,
+                .foregroundColor: UIColor.cyan,
                 .paragraphStyle: paragraphStyle,
             ]
             
             var attributedString = NSAttributedString(string: textTop, attributes: attrs)
             
-            let imageFitSize = AVMakeRect(aspectRatio: self.image.size, insideRect: self.imageView.bounds)
-            self.image.draw(in: imageFitSize)
+            let imageFitSize = AVMakeRect(aspectRatio: self.image!.size, insideRect: self.imageView.bounds)
+            self.image!.draw(in: imageFitSize)
             
             // position and size for text
             let strX = ((self.imageView.bounds.width - imageFitSize.width) / 2) + 10
