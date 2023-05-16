@@ -16,6 +16,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var bottomTextButton: UIButton!
     
     var image = UIImage()
+    var textTop = ""
+    var textBottom = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -52,6 +54,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         imageView.image = image
         self.image = image
+        addText()
     }
     
     @IBAction func topTextTapped(_ sender: Any) {
@@ -59,16 +62,26 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         ac.addTextField()
         ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] action in
             guard let text = ac.textFields?[0].text else { return }
-            self?.addText(text: text)
+            self?.textTop = text
+            self?.addText()
         })
         
         present(ac, animated: true)
     }
     
     @IBAction func bottomTextTapped(_ sender: UIButton) {
+        let ac = UIAlertController(title: "Type text for the bottom", message: nil, preferredStyle: .alert)
+        ac.addTextField()
+        ac.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] action in
+            guard let text = ac.textFields?[0].text else { return }
+            self?.textBottom = text
+            self?.addText()
+        })
+        
+        present(ac, animated: true)
     }
     
-    func addText(text: String) {
+    func addText() {
         let imageViewWidth = imageView.frame.size.width
         let imageViewHeight = imageView.frame.size.height
         
@@ -80,22 +93,28 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: 25, weight: .semibold),
-                .foregroundColor: UIColor.red.cgColor,
-                .paragraphStyle: paragraphStyle
+                .foregroundColor: UIColor.red,
+                .paragraphStyle: paragraphStyle,
             ]
             
-            let attributedString = NSAttributedString(string: text, attributes: attrs)
+            var attributedString = NSAttributedString(string: textTop, attributes: attrs)
             
             let imageFitSize = AVMakeRect(aspectRatio: self.image.size, insideRect: self.imageView.bounds)
-            
             self.image.draw(in: imageFitSize)
             
-            let strX = (self.imageView.bounds.width - imageFitSize.width) / 2
-            let stry = (self.imageView.bounds.height - imageFitSize.height) / 2
-            let strWidth = imageFitSize.width - 40
-            let strHeight = imageFitSize.height - 40
+            // position and size for text
+            let strX = ((self.imageView.bounds.width - imageFitSize.width) / 2) + 10
+            var strY = ((self.imageView.bounds.height - imageFitSize.height) / 2) + 10
+            let strWidth = imageFitSize.width - 30
+            let strHeight = imageFitSize.height - 30
             
-            attributedString.draw(with: CGRect(x: strX + 20, y: stry + 20, width: strWidth, height: strHeight), options: .usesLineFragmentOrigin, context: nil)
+            // for top text
+            attributedString.draw(with: CGRect(x: strX, y: strY, width: strWidth, height: strHeight), options: .usesLineFragmentOrigin, context: nil)
+            
+            // for bottom text
+            attributedString = NSAttributedString(string: textBottom, attributes: attrs)
+            strY += imageFitSize.height - 50
+            attributedString.draw(with: CGRect(x: strX, y: strY, width: strWidth, height: strHeight), options: .usesLineFragmentOrigin, context: nil)
         }
         
         imageView.image = image
